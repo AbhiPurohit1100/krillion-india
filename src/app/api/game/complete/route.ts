@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 const CompleteGameSchema = z.object({
   playerId: z.string().min(1),
   nickname: z.string().optional().default("Guest"),

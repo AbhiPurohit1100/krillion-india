@@ -9,6 +9,8 @@ import { SEED_QUESTIONS } from "@/lib/seed-data";
 import { isRateLimited } from "@/lib/rateLimit";
 import { logEvent } from "@/lib/logger";
 
+export const dynamic = "force-dynamic";
+
 const SubmitAnswerSchema = z.object({
   questionId: z.string().min(1),
   rawAnswer: z.string(),
