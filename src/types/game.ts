@@ -19,7 +19,8 @@ export interface AnswerResult {
   isValid: boolean;
   rarityTier: RarityTier;
   rarityScore: number; // 0 to 1000
-  altitudeGained: number; // in meters
+  altitudeGained: number; // in meters (also represents depth dived in fishing theme)
+  depthGained?: number; // alias for altitudeGained
   observedFrequency?: number;
   explanation?: string;
 }
@@ -31,6 +32,7 @@ export interface GameState {
   answers: AnswerResult[];
   totalScore: number;
   currentAltitude: number; // in meters (starts at e.g. 50m, max ~10,000m)
+  currentDepth?: number; // alias for currentAltitude
   isCompleted: boolean;
   timeRemaining: number;
   isPaused: boolean;
@@ -41,7 +43,7 @@ export interface LeaderboardEntry {
   nickname: string;
   totalScore: number;
   altitude: number;
+  depth?: number;
   completedAt: string;
   isCurrentPlayer?: boolean;
 }
-

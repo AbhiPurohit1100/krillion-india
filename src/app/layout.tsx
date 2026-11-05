@@ -1,27 +1,37 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import "./globals.css";
 
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
 export const metadata: Metadata = {
-  title: "Patang Trivia — Krillion India",
-  description: "An Indian daily rarity trivia game. Fly your kite into the stratosphere with the rarest valid answers!",
+  title: "Krillion India — Daily Trivia",
+  description:
+    "Cast your line into Indian trivia. The rarer your answer, the deeper you go. Play 7 questions daily and see what you catch.",
+  keywords: ["trivia", "india", "daily game", "krillion", "fishing", "quiz"],
+  openGraph: {
+    title: "Krillion India — Daily Trivia",
+    description: "The rarer your answer, the deeper you go. Play 7 questions daily.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body className="min-h-screen flex flex-col bg-slate-900 text-slate-900 antialiased selection:bg-amber-400 selection:text-slate-900">
+    <html lang="en" className={inter.variable}>
+      <body
+        className={`${inter.className} min-h-screen flex flex-col antialiased`}
+      >
         <Navbar />
         <main className="flex-1 flex flex-col">{children}</main>
-        <footer className="py-4 text-center text-xs text-sky-900/60 border-t border-sky-300/30">
-          <p>© {new Date().getFullYear()} Patang Trivia · Krillion India · Inspired by Deep Ball & Krillion</p>
-        </footer>
       </body>
     </html>
   );
 }
-

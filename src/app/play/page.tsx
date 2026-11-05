@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import KiteCanvas from "@/components/KiteCanvas";
+import FishingCanvas from "@/components/FishingCanvas";
 import NicknameModal from "@/components/NicknameModal";
 import QuestionCard from "@/components/QuestionCard";
 import ResultsView from "@/components/ResultsView";
 import { AnswerResult, GameQuestion, RarityTier } from "@/types/game";
+import { Anchor } from "lucide-react";
 
 export default function PlayPage() {
   const [nickname, setNickname] = useState("");
@@ -23,19 +24,26 @@ export default function PlayPage() {
   const [lastResult, setLastResult] = useState<AnswerResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [currentAltitude, setCurrentAltitude] = useState(250); // initial low altitude
-  const [lastAltitudeGain, setLastAltitudeGain] = useState(0);
+  const [currentDepth, setCurrentDepth] = useState(150); // initial surface depth in meters
+  const [lastDepthGain, setLastDepthGain] = useState(0);
   const [lastRarityTier, setLastRarityTier] = useState<RarityTier | null>(null);
 
   const [isGameOver, setIsGameOver] = useState(false);
 
   // Initialize player and load daily questions from backend API
   useEffect(() => {
-    let savedNick = localStorage.getItem("patang_nickname") || "";
-    let savedAnonId = localStorage.getItem("patang_anonymous_id") || "";
+    let savedNick =
+      localStorage.getItem("krillion_nickname") ||
+      localStorage.getItem("patang_nickname") ||
+      "";
+    let savedAnonId =
+      localStorage.getItem("krillion_anonymous_id") ||
+      localStorage.getItem("patang_anonymous_id") ||
+      "";
 
     if (!savedAnonId) {
       savedAnonId = "anon_" + Math.random().toString(36).substring(2, 11);
+      localStorage.setItem("krillion_anonymous_id", savedAnonId);
       localStorage.setItem("patang_anonymous_id", savedAnonId);
     }
     setPlayerId(savedAnonId);
@@ -70,7 +78,8 @@ export default function PlayPage() {
 
   // 25s Countdown Timer
   useEffect(() => {
-    if (!isTimerActive || lastResult !== null || isGameOver || questions.length === 0) return;
+    if (!isTimerActive || lastResult !== null || isGameOver || questions.length === 0)
+      return;
 
     if (timeRemaining <= 0) {
       handleAnswerSubmit(""); // Timed out submission
@@ -102,7 +111,7 @@ export default function PlayPage() {
           questionId: currentQuestion.id,
           rawAnswer: trimmed,
           playerId,
-          nickname: nickname || "Guest",
+          nickname: nickname || "Captain",
           dailyGameId,
         }),
       });
@@ -112,6 +121,7 @@ export default function PlayPage() {
       }
 
       const data = await res.json();
+      const gain = data.depthGained ?? data.altitudeGained ?? 0;
 
       const result: AnswerResult = {
         questionId: currentQuestion.id,
@@ -122,15 +132,16 @@ export default function PlayPage() {
         isValid: data.isValid,
         rarityTier: data.rarityTier,
         rarityScore: data.rarityScore,
-        altitudeGained: data.altitudeGained,
+        altitudeGained: gain,
+        depthGained: gain,
         explanation: data.explanation || currentQuestion.explanation,
       };
 
       setLastResult(result);
       setAnswers((prev) => [...prev, result]);
-      setLastAltitudeGain(data.altitudeGained);
+      setLastDepthGain(gain);
       setLastRarityTier(data.rarityTier);
-      setCurrentAltitude((prev) => prev + data.altitudeGained);
+      setCurrentDepth((prev) => prev + gain);
     } catch (err) {
       console.error("Submission failed, using fallback:", err);
       // Fallback local resolution if network error
@@ -143,12 +154,13 @@ export default function PlayPage() {
         rarityTier: trimmed ? "uncommon" : "invalid",
         rarityScore: trimmed ? 300 : 0,
         altitudeGained: trimmed ? 450 : 0,
+        depthGained: trimmed ? 450 : 0,
       };
       setLastResult(fallbackResult);
       setAnswers((prev) => [...prev, fallbackResult]);
-      setLastAltitudeGain(fallbackResult.altitudeGained);
+      setLastDepthGain(fallbackResult.altitudeGained);
       setLastRarityTier(fallbackResult.rarityTier);
-      setCurrentAltitude((prev) => prev + fallbackResult.altitudeGained);
+      setCurrentDepth((prev) => prev + fallbackResult.altitudeGained);
     } finally {
       setIsSubmitting(false);
     }
@@ -160,7 +172,7 @@ export default function PlayPage() {
       setLastResult(null);
       setTimeRemaining(25);
       setIsTimerActive(true);
-      setLastAltitudeGain(0);
+      setLastDepthGain(0);
     } else {
       // Finalize game score on server
       const finalScore = answers.reduce((sum, a) => sum + a.rarityScore, 0);
@@ -170,10 +182,11 @@ export default function PlayPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             playerId,
-            nickname: nickname || "Guest",
+            nickname: nickname || "Captain",
             dailyGameId,
             totalScore: finalScore,
-            altitude: currentAltitude,
+            altitude: currentDepth, // preserves DB field
+            depth: currentDepth,
           }),
         });
       } catch (err) {
@@ -189,8 +202,8 @@ export default function PlayPage() {
     setIsTimerActive(true);
     setAnswers([]);
     setLastResult(null);
-    setCurrentAltitude(250);
-    setLastAltitudeGain(0);
+    setCurrentDepth(150);
+    setLastDepthGain(0);
     setLastRarityTier(null);
     setIsGameOver(false);
   };
@@ -199,17 +212,19 @@ export default function PlayPage() {
 
   if (isLoadingQuestions) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center space-y-4">
-        <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-300 animate-spin flex items-center justify-center text-amber-600 font-black">
-          🪁
+      <div className="flex-1 flex flex-col items-center justify-center space-y-4 pt-32 pb-20">
+        <div className="w-14 h-14 rounded-2xl bg-ocean-500/15 border border-ocean-500/30 animate-spin flex items-center justify-center text-sunset-gold">
+          <Anchor className="w-7 h-7" />
         </div>
-        <p className="text-sm font-bold text-slate-700">Checking sky conditions and daily questions...</p>
+        <p className="text-sm font-bold text-slate-300">
+          Checking ocean tides & loading today&apos;s expedition...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center max-w-5xl w-full mx-auto p-4 sm:p-6 space-y-6">
+    <div className="flex-1 flex flex-col items-center max-w-5xl w-full mx-auto pt-20 px-4 sm:px-6 pb-16 space-y-6">
       {/* Nickname Selection Modal */}
       <NicknameModal
         isOpen={isNicknameModalOpen}
@@ -218,12 +233,13 @@ export default function PlayPage() {
         currentNickname={nickname}
       />
 
-      {/* Flight Canvas (Animated Patang in the Sky) */}
+      {/* Fishing Canvas (Animated Boat, Ocean Depths, Fishing Hook) */}
       <div className="w-full">
-        <KiteCanvas
-          altitude={currentAltitude}
-          lastAltitudeGain={lastAltitudeGain}
+        <FishingCanvas
+          depth={currentDepth}
+          lastDepthGain={lastDepthGain}
           lastRarityTier={lastRarityTier}
+          isGameOver={isGameOver}
         />
       </div>
 
@@ -245,7 +261,7 @@ export default function PlayPage() {
         <ResultsView
           answers={answers}
           totalScore={totalScore}
-          finalAltitude={currentAltitude}
+          finalAltitude={currentDepth}
           nickname={nickname}
           onPlayAgain={handlePlayAgain}
         />
