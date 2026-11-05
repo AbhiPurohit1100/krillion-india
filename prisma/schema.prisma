@@ -1,0 +1,190 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum QuestionStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum GameStatus {
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum ValidationStatus {
+  PENDING
+  VALID
+  INVALID
+  UNCERTAIN
+  MANUAL_REVIEW
+}
+
+model User {
+  id                  String       @id @default(uuid())
+  nickname            String
+  anonymous_player_id String       @unique
+  created_at          DateTime     @default(now())
+
+  submissions         Submission[]
+  scores              Score[]
+
+  @@map("users")
+}
+
+model Question {
+  id             String                @id @default(uuid())
+  question_text  String
+  category       String
+  subcategory    String?
+  difficulty     String                @default("medium")
+  language       String                @default("en")
+  status         QuestionStatus        @default(DRAFT)
+  scheduled_date DateTime?
+  explanation    String?
+  created_at     DateTime              @default(now())
+
+  valid_entities QuestionValidEntity[]
+  game_questions DailyGameQuestion[]
+  submissions    Submission[]
+  snapshots      RaritySnapshot[]
+
+  @@map("questions")
+}
+
+model Entity {
+  id             String                @id @default(uuid())
+  canonical_name String
+  entity_type    String
+  metadata       Json?
+  created_at     DateTime              @default(now())
+
+  aliases        EntityAlias[]
+  valid_in       QuestionValidEntity[]
+  submissions    Submission[]
+  snapshots      RaritySnapshot[]
+
+  @@map("entities")
+}
+
+model EntityAlias {
+  id               String   @id @default(uuid())
+  entity_id        String
+  alias            String
+  normalized_alias String
+  language         String   @default("en")
+
+  entity           Entity   @relation(fields: [entity_id], references: [id], onDelete: Cascade)
+
+  @@index([normalized_alias])
+  @@map("entity_aliases")
+}
+
+model QuestionValidEntity {
+  id          String   @id @default(uuid())
+  question_id String
+  entity_id   String
+
+  question    Question @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  entity      Entity   @relation(fields: [entity_id], references: [id], onDelete: Cascade)
+
+  @@unique([question_id, entity_id])
+  @@map("question_valid_entities")
+}
+
+model DailyGame {
+  id           String              @id @default(uuid())
+  game_date    DateTime            @unique
+  status       GameStatus          @default(ACTIVE)
+  published_at DateTime?           @default(now())
+
+  questions    DailyGameQuestion[]
+  scores       Score[]
+  submissions  Submission[]
+
+  @@map("daily_games")
+}
+
+model DailyGameQuestion {
+  id                 String          @id @default(uuid())
+  daily_game_id      String
+  question_id        String
+  question_order     Int
+  rarity_snapshot_id String?
+
+  daily_game         DailyGame       @relation(fields: [daily_game_id], references: [id], onDelete: Cascade)
+  question           Question        @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  rarity_snapshot    RaritySnapshot? @relation(fields: [rarity_snapshot_id], references: [id], onDelete: SetNull)
+
+  @@unique([daily_game_id, question_order])
+  @@unique([daily_game_id, question_id])
+  @@map("daily_game_questions")
+}
+
+model Submission {
+  id                  String           @id @default(uuid())
+  player_id           String
+  question_id         String
+  daily_game_id       String?
+  raw_answer          String
+  normalized_answer   String
+  canonical_entity_id String?
+  validation_status   ValidationStatus @default(PENDING)
+  rarity_score        Float?
+  submitted_at        DateTime         @default(now())
+
+  player              User             @relation(fields: [player_id], references: [id], onDelete: Cascade)
+  question            Question         @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  daily_game          DailyGame?       @relation(fields: [daily_game_id], references: [id], onDelete: SetNull)
+  canonical_entity    Entity?          @relation(fields: [canonical_entity_id], references: [id], onDelete: SetNull)
+
+  @@unique([player_id, question_id, daily_game_id])
+  @@index([question_id, normalized_answer])
+  @@map("submissions")
+}
+
+model RaritySnapshot {
+  id                  String              @id @default(uuid())
+  question_id         String
+  entity_id           String
+  estimated_frequency Float               // Prior probability (0.0 to 1.0)
+  observed_frequency  Float               @default(0.0)
+  final_frequency     Float               @default(0.0) // Bayesian blended probability
+  scoring_version     String              @default("v1.0")
+  created_at          DateTime            @default(now())
+
+  question            Question            @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  entity              Entity              @relation(fields: [entity_id], references: [id], onDelete: Cascade)
+  game_questions      DailyGameQuestion[]
+
+  @@unique([question_id, entity_id, scoring_version])
+  @@map("rarity_snapshots")
+}
+
+model Score {
+  id            String    @id @default(uuid())
+  player_id     String
+  daily_game_id String
+  total_score   Float     @default(0.0)
+  altitude      Float     @default(0.0)
+  completed_at  DateTime  @default(now())
+
+  player        User      @relation(fields: [player_id], references: [id], onDelete: Cascade)
+  daily_game    DailyGame @relation(fields: [daily_game_id], references: [id], onDelete: Cascade)
+
+  @@unique([player_id, daily_game_id])
+  @@index([daily_game_id, total_score(sort: Desc)])
+  @@map("scores")
+}
