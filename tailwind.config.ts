@@ -49,6 +49,9 @@ const config: Config = {
         "hook-drop": "hookDrop 1s ease-out forwards",
         "fish-catch": "fishCatch 0.6s ease-out forwards",
         "drift": "drift 25s linear infinite",
+        "krillion-glow": "krillionGlow 2s ease-in-out infinite",
+        "cloud-drift": "cloudDrift 20s linear infinite",
+        "toast-in": "toastIn 0.3s ease-out forwards",
       },
       keyframes: {
         bob: {
@@ -99,6 +102,22 @@ const config: Config = {
         drift: {
           "0%": { transform: "translateX(-10%)" },
           "100%": { transform: "translateX(110%)" },
+        },
+        krillionGlow: {
+          "0%, 100%": { boxShadow: "0 0 8px #00e5ff40" },
+          "50%": { boxShadow: "0 0 24px #00e5ff80" },
+        },
+        cloudDrift: {
+          "0%": { transform: "translateX(0px)" },
+          "100%": { transform: "translateX(60px)" },
+        },
+        toastIn: {
+          "0%": { opacity: "0", transform: "translateY(-16px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        toastOut: {
+          "0%": { opacity: "1", transform: "translateY(0)" },
+          "100%": { opacity: "0", transform: "translateY(-16px)" },
         },
       },
     },

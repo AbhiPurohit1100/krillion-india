@@ -7,7 +7,8 @@ import { Anchor, Menu, X, Shield } from "lucide-react";
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
-  { href: "/play", label: "Play" },
+  { href: "/play", label: "Solo Dive" },
+  { href: "/party", label: "🐡 Puffer Party" },
 ];
 
 export default function Navbar() {

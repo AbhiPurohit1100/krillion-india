@@ -14,11 +14,13 @@
   }
 
   body {
-    background: #060e1a;
+    background: #030712;
     color: #e2e8f0;
     min-height: 100vh;
     overflow-x: hidden;
+    image-rendering: pixelated;
   }
+
 
   ::selection {
     background: rgba(255, 166, 43, 0.4);
@@ -187,6 +189,90 @@
       #13418f 100%
     );
   }
+
+  /* Pixel/retro font feel */
+  .font-pixel {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.15em;
+  }
+
+  /* Dark Gloomy Retro Pixel Sky gradient background */
+  .sky-bg {
+    background: linear-gradient(
+      180deg,
+      #131e2f 0%,
+      #1b2d45 20%,
+      #14253a 40%,
+      #0e1a2b 60%,
+      #08101c 80%,
+      #030712 100%
+    );
+    position: relative;
+  }
+
+  .sky-bg::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      radial-gradient(1px 1px at 20px 30px, #ffffff15, rgba(0,0,0,0)),
+      radial-gradient(1.5px 1.5px at 140px 70px, #ffffff20, rgba(0,0,0,0)),
+      radial-gradient(1px 1px at 220px 150px, #00e5ff18, rgba(0,0,0,0)),
+      radial-gradient(1px 1px at 300px 90px, #ffffff12, rgba(0,0,0,0));
+    background-repeat: repeat;
+    background-size: 320px 240px;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.6;
+  }
+
+  /* Retro CRT TV Scanlines & Pixel Mesh Overlay */
+  .scanlines {
+    position: relative;
+  }
+  .scanlines::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      repeating-linear-gradient(
+        0deg,
+        rgba(0,0,0,0.2) 0px,
+        rgba(0,0,0,0.2) 1px,
+        transparent 1px,
+        transparent 3px
+      ),
+      linear-gradient(180deg, rgba(0, 229, 255, 0.02) 50%, rgba(255, 107, 157, 0.02) 100%);
+    pointer-events: none;
+    z-index: 99;
+  }
+
+  /* Pixel borders & gloomy shadow */
+  .pixel-box {
+    box-shadow: 
+      inset -3px -3px 0px 0px #0a111e,
+      inset 3px 3px 0px 0px #1e293b,
+      0 0 16px rgba(0, 0, 0, 0.8);
+    image-rendering: pixelated;
+  }
+
+  /* Krillion-style cyan glow border */
+  .krillion-border {
+    border: 2px solid #00e5ff;
+    box-shadow: 0 0 14px rgba(0,229,255,0.25), inset 0 0 14px rgba(0,229,255,0.08);
+  }
+
+
+  /* Neon text glow */
+  .text-neon-cyan {
+    color: #00e5ff;
+    text-shadow: 0 0 10px rgba(0,229,255,0.6);
+  }
+
+  .text-neon-pink {
+    color: #ff6b9d;
+    text-shadow: 0 0 10px rgba(255,107,157,0.6);
+  }
 }
 
 /* ── Keyframe animations ───────────────────────────── */
@@ -236,6 +322,35 @@
 .stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
 .stagger-children > *:nth-child(6) { animation-delay: 0.6s; }
 .stagger-children > *:nth-child(7) { animation-delay: 0.7s; }
+
+/* ── New Krillion keyframes ────────────────────────── */
+@keyframes oceanWave {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-20px); }
+}
+
+@keyframes cloudDrift {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(60px); }
+}
+
+@keyframes incorrectFlash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes krillionGlow {
+  0%, 100% { box-shadow: 0 0 8px #00e5ff40; }
+  50% { box-shadow: 0 0 24px #00e5ff80; }
+}
+
+.animate-krillion-glow {
+  animation: krillionGlow 2s ease-in-out infinite;
+}
+
+.animate-incorrect-flash {
+  animation: incorrectFlash 0.5s ease-in-out 3;
+}
 
 /* ── Scrollbar ─────────────────────────────────────── */
 ::-webkit-scrollbar {

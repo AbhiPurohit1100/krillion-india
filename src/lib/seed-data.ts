@@ -5,6 +5,9 @@ export interface SeedEntity {
   aliases: string[];
 }
 
+import { ADDITIONAL_50_QUESTIONS } from "./additional-questions";
+
+
 export interface SeedQuestion {
   id: string;
   order: number;
@@ -592,5 +595,7 @@ export const SEED_QUESTIONS: SeedQuestion[] = [
       },
     ],
   },
+  ...ADDITIONAL_50_QUESTIONS,
 ];
+
 

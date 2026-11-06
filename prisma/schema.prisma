@@ -188,3 +188,96 @@ model Score {
   @@index([daily_game_id, total_score(sort: Desc)])
   @@map("scores")
 }
+
+enum PufferRoomStatus {
+  WAITING
+  COUNTDOWN
+  ROUND_START
+  PLAYER_TURN
+  TURN_RESULT
+  IN_PROGRESS
+  ROUND_RESULTS
+  FINAL_RESULTS
+  CANCELLED
+}
+
+enum PufferRoundStatus {
+  ACTIVE
+  SCORING
+  REVEALED
+}
+
+model PufferRoom {
+  id             String           @id @default(uuid())
+  code           String           @unique
+  host_id        String
+  status         PufferRoomStatus @default(WAITING)
+  max_players    Int              @default(8)
+  total_rounds   Int              @default(5)
+  current_round  Int              @default(0)
+  round_deadline DateTime?
+  turn_order     String?          // Comma-separated list of player IDs for current round
+  active_turn_index Int           @default(0) // Index into turn_order
+  created_at     DateTime         @default(now())
+  expires_at     DateTime
+
+  players        PufferPlayer[]
+  rounds         PufferRound[]
+
+  @@map("puffer_rooms")
+}
+
+
+model PufferPlayer {
+  id          String             @id @default(uuid())
+  room_id     String
+  anon_id     String
+  nickname    String
+  is_host     Boolean            @default(false)
+  total_score Int                @default(0)
+  is_active   Boolean            @default(true)
+  joined_at   DateTime           @default(now())
+  last_seen   DateTime           @default(now())
+
+  room        PufferRoom         @relation(fields: [room_id], references: [id], onDelete: Cascade)
+  submissions PufferSubmission[]
+
+  @@unique([room_id, anon_id])
+  @@map("puffer_players")
+}
+
+model PufferRound {
+  id           String            @id @default(uuid())
+  room_id      String
+  round_number Int
+  question_id  String
+  status       PufferRoundStatus @default(ACTIVE)
+  started_at   DateTime          @default(now())
+  deadline     DateTime
+  ended_at     DateTime?
+
+  room         PufferRoom        @relation(fields: [room_id], references: [id], onDelete: Cascade)
+  submissions  PufferSubmission[]
+
+  @@unique([room_id, round_number])
+  @@map("puffer_rounds")
+}
+
+model PufferSubmission {
+  id                String       @id @default(uuid())
+  round_id          String
+  player_id         String
+  raw_answer        String
+  normalized_answer String
+  canonical_name    String?
+  is_valid          Boolean      @default(false)
+  round_points      Int          @default(0)
+  submitted_at      DateTime     @default(now())
+
+  round             PufferRound  @relation(fields: [round_id], references: [id], onDelete: Cascade)
+  player            PufferPlayer @relation(fields: [player_id], references: [id], onDelete: Cascade)
+
+  @@unique([round_id, player_id])
+  @@map("puffer_submissions")
+}
+
